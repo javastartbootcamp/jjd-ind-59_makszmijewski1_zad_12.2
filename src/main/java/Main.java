@@ -1,37 +1,48 @@
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        Employee[] employees = new Employee[4];
+        List<Employee> employees = new ArrayList<Employee>();
 
+        createFile();
+        readData(employees);
+        printAllData(employees);
+    }
+
+    private static void printAllData(List<Employee> employees) {
+        for (Employee employee : employees) {
+            System.out.println(employee);
+        }
+    }
+
+    private static void readData(List<Employee> employees) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("employees.csv"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                employees.add(createEmployee(line));
+            }
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter("stats.txt"))) {
+
+                writer.write(calculateAndWriteAverageSalary(employees));
+                writer.write(findLowestAndHighestSalaryAndWrite(employees));
+                writer.write(countEmployeesAndWrite(employees));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private static void createFile() throws IOException {
         File file = new File("employees.csv");
 
         if (file.exists()) {
             File stats = new File("stats.txt");
             stats.createNewFile();
-        }
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader("employees.csv"));
-            String line;
-            int i = 0;
-            while ((line = reader.readLine()) != null) {
-                employees[i] = createEmployee(line);
-                i++;
-            }
-            BufferedWriter writer = new BufferedWriter(new FileWriter("stats.txt"));
-            writer.write(calculateAndWriteAverageSalary(employees));
-            writer.write(findLowestAndHighestSalaryAndWrite(employees));
-            writer.write(countEmployeesAndWrite(employees));
-            writer.close();
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        for (Employee employee : employees) {
-            System.out.println(employee);
         }
     }
 
@@ -40,8 +51,8 @@ public class Main {
         return new Employee(values[0], values[1], values[2], values[3], Double.parseDouble(values[4]));
     }
 
-    private static String calculateAndWriteAverageSalary(Employee[] employees) {
-        double[] salaries = new double[employees.length];
+    private static String calculateAndWriteAverageSalary(List<Employee> employees) {
+        double[] salaries = new double[employees.size()];
         int counter = 0;
         double sum = 0;
         for (Employee employee : employees) {
@@ -53,8 +64,8 @@ public class Main {
         return "Średnia wypłata: " + average + "\n";
     }
 
-    private static String findLowestAndHighestSalaryAndWrite(Employee[] employees) {
-        double[] salaries = new double[employees.length];
+    private static String findLowestAndHighestSalaryAndWrite(List<Employee> employees) {
+        double[] salaries = new double[employees.size()];
         int counter = 0;
         for (Employee employee : employees) {
             salaries[counter] = employee.getSalary();
@@ -65,7 +76,7 @@ public class Main {
                 "Maksymalna wypłata: " + salaries[salaries.length - 1] + "\n";
     }
 
-    private static String countEmployeesAndWrite(Employee[] employees) {
+    private static String countEmployeesAndWrite(List<Employee> employees) {
         int itCounter = 0;
         int supportCounter = 0;
         int managementCounter = 0;
