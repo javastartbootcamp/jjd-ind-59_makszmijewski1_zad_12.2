@@ -7,37 +7,44 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        List<Employee> employees = new ArrayList<Employee>();
-
-        createFile();
-        readData(employees);
-        printAllData(employees);
+        Main main = new Main();
+        main.createStatsFileIfNotExist();
+        List<Employee> employees = main.readData();
+        main.writeData(employees);
+        main.printAllData(employees);
     }
 
-    private static void printAllData(List<Employee> employees) {
+    private void writeData(List<Employee> employees) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("stats.txt"))) {
+            writer.write(calculateAndWriteAverageSalary(employees));
+            writer.write(findLowestAndHighestSalaryAndWrite(employees));
+            writer.write(countEmployeesAndWrite(employees));
+        } catch (IOException e) {
+            System.out.println("Nie udało się zapisać pliku");
+            e.printStackTrace();
+        }
+    }
+
+    private void printAllData(List<Employee> employees) {
         for (Employee employee : employees) {
             System.out.println(employee);
         }
     }
 
-    private static void readData(List<Employee> employees) {
+    private List<Employee> readData() {
+        List<Employee> employees = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader("employees.csv"))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 employees.add(createEmployee(line));
             }
-            try (BufferedWriter writer = new BufferedWriter(new FileWriter("stats.txt"))) {
-
-                writer.write(calculateAndWriteAverageSalary(employees));
-                writer.write(findLowestAndHighestSalaryAndWrite(employees));
-                writer.write(countEmployeesAndWrite(employees));
-            }
         } catch (IOException e) {
             e.printStackTrace();
         }
+        return employees;
     }
 
-    private static void createFile() throws IOException {
+    private void createStatsFileIfNotExist() throws IOException {
         File file = new File("employees.csv");
 
         if (file.exists()) {
@@ -71,9 +78,18 @@ public class Main {
             salaries[counter] = employee.getSalary();
             counter++;
         }
-        Arrays.sort(salaries);
-        return "Minimalna wypłata: " + salaries[0] + "\n" +
-                "Maksymalna wypłata: " + salaries[salaries.length - 1] + "\n";
+        double smallest = salaries[0];
+        double largetst = salaries[0];
+
+        for (int i = 1; i < salaries.length; i++) {
+            if (salaries[i] > largetst) {
+                largetst = salaries[i];
+            } else if (salaries[i] < smallest) {
+                smallest = salaries[i];
+            }
+        }
+        return "Minimalna wypłata: " + smallest + "\n" +
+                "Maksymalna wypłata: " + largetst + "\n";
     }
 
     private static String countEmployeesAndWrite(List<Employee> employees) {
